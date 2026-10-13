@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>校园跑</title>
+<style>
+  :root {
+    --brand-1: #6366f1;
+    --brand-2: #8b5cf6;
+    --wechat: #07c160;
+    --alipay: #1677ff;
+    --bg: #f5f6f8;
+    --card: #ffffff;
+    --line: #e5e7eb;
+    --text: #1f2937;
+    --muted: #6b7280;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    /* bottom padding keeps content clear of the fixed bar */
+    padding: 24px 16px 200px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  button, input { font: inherit; }
+  button { border: 0; background: none; -webkit-tap-highlight-color: transparent; }
+
+  h1 { margin: 0 0 6px; font-size: 24px; font-weight: 600; text-align: center; }
+  .page-sub { margin: 0 0 20px; font-size: 13px; color: var(--muted); text-align: center; }
+
+  .card {
+    padding: 16px;
+    margin-bottom: 16px;
+    background: var(--card);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+  }
+  .card.is-on { border: 1px solid var(--brand-1); }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .opt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 64px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--card);
+    color: var(--text);
+    cursor: pointer;
+  }
+  .opt-price { font-size: 13px; color: var(--muted); }
+  .opt.is-on {
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--brand-1), var(--brand-2));
+    color: #fff;
+  }
+  .opt.is-on .opt-price { color: rgba(255, 255, 255, .85); }
+
+  .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .card-title { font-weight: 600; }
+  .card-out { font-weight: 600; color: var(--brand-1); }
+
+  .field { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+  .field input {
+    flex: 1;
+    height: 48px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--text);
+    font-size: 16px;
+  }
+  .field input:focus { outline: none; border-color: var(--brand-1); }
+  .field-unit { color: var(--muted); }
+  .hint { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+
+  .bar {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: var(--card);
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -1px 3px rgba(0, 0, 0, .05);
+  }
+  .bar-amount { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+  .bar-amount strong { font-size: 20px; color: var(--brand-1); }
+  .bar-pay { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .bar-pay button { height: 48px; border-radius: 12px; color: #fff; font-size: 16px; cursor: pointer; }
+  .bar-pay button:disabled { opacity: .45; cursor: default; }
+  #payWechat { background: var(--wechat); }
+  #payAlipay { background: var(--alipay); }
+  .bar-note { margin: 10px 0 0; font-size: 12px; color: var(--muted); text-align: center; }
+
+  .modal {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: none;
+    overflow-y: auto;
+    padding: 24px;
+    background: rgba(17, 24, 39, .5);
+  }
+  .modal.is-open { display: flex; }
+  .modal-box {
+    width: 100%;
+    max-width: 340px;
+    /* margin auto centers the box and still allows scrolling when it is tall */
+    margin: auto;
+    padding: 20px;
+    background: var(--card);
+    border-radius: 16px;
+    text-align: center;
+  }
+  .modal-title { margin: 0 0 16px; font-size: 16px; font-weight: 600; }
+  .qr {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto;
+    border: 1px dashed #c7cbd3;
+    border-radius: 12px;
+    background: #fafafa;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  /* with a real QR image the box drops its placeholder look and follows the image */
+  .qr.is-img {
+    width: 100%;
+    height: auto;
+    border: 0;
+    background: none;
+  }
+  .qr img { display: block; width: 100%; height: auto; border-radius: 12px; }
+  .modal-done {
+    width: 100%;
+    height: 48px;
+    margin-top: 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--brand-1), var(--brand-2));
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+  <h1>校园跑</h1>
+  <p class="page-sub">选择里程，扫码支付后联系客服</p>
+
+  <section class="card">
+    <div class="grid">
+      <button class="opt" type="button" data-km="1" data-price="3" aria-pressed="false"><span>1km</span><span class="opt-price">¥3</span></button>
+      <button class="opt" type="button" data-km="3" data-price="6" aria-pressed="false"><span>3km</span><span class="opt-price">¥6</span></button>
+      <button class="opt" type="button" data-km="5" data-price="10.88" aria-pressed="false"><span>5km</span><span class="opt-price">¥10.88</span></button>
+      <button class="opt" type="button" data-km="10" data-price="20" aria-pressed="false"><span>10km</span><span class="opt-price">¥20</span></button>
+      <button class="opt" type="button" data-km="25" data-price="48" aria-pressed="false"><span>25km</span><span class="opt-price">¥48</span></button>
+      <button class="opt" type="button" data-km="50" data-price="98" aria-pressed="false"><span>50km</span><span class="opt-price">¥98</span></button>
+    </div>
+  </section>
+
+  <section class="card" id="customCard">
+    <div class="card-head">
+      <span class="card-title">自定义里程</span>
+      <span class="card-out" id="customOut">—</span>
+    </div>
+    <div class="field">
+      <input id="customKm" type="number" inputmode="decimal" min="0.5" step="0.5" placeholder="输入公里数">
+      <span class="field-unit">km</span>
+    </div>
+    <p class="hint">超过 10km 的部分每公里 +¥2.5</p>
+  </section>
+
+  <footer class="bar">
+    <div class="bar-amount">
+      <span>应付金额</span>
+      <strong id="amount">¥0.00</strong>
+    </div>
+    <div class="bar-pay">
+      <button id="payWechat" type="button" disabled>微信支付</button>
+      <button id="payAlipay" type="button" disabled>支付宝</button>
+    </div>
+    <p class="bar-note">付款后请联系客服确认订单</p>
+  </footer>
+
+  <div class="modal" id="modal">
+    <div class="modal-box">
+      <p class="modal-title" id="modalTitle"></p>
+      <!-- QR slot: the image is picked from QR_IMAGES in the script below -->
+      <div class="qr" id="qrSlot"></div>
+      <button class="modal-done" id="modalDone" type="button">我已完成</button>
+    </div>
+  </div>
+
+<script>
+(function () {
+  // QR images live next to this file, e.g. { wechat: 'wechat.jpg', alipay: 'alipay.jpg' }
+  var QR_IMAGES = { wechat: 'wechat.jpg', alipay: 'alipay.jpg' };
+
+  var PER_KM = 2.5;    // price per km above 10km
+  var BASE_KM = 10;
+  var BASE_PRICE = 20;
+
+  // Listed packs. The first four also act as tiers for custom mileage.
+  var PACKS = [
+    { km: 1, price: 3 },
+    { km: 3, price: 6 },
+    { km: 5, price: 10.88 },
+    { km: 10, price: 20 },
+    { km: 25, price: 48 },
+    { km: 50, price: 98 }
+  ];
+  var TIERS = PACKS.slice(0, 4);
+
+  var optionButtons = document.querySelectorAll('.opt');
+  var customCard = document.getElementById('customCard');
+  var customInput = document.getElementById('customKm');
+  var customOut = document.getElementById('customOut');
+  var amountEl = document.getElementById('amount');
+  var payWechat = document.getElementById('payWechat');
+  var payAlipay = document.getElementById('payAlipay');
+  var modal = document.getElementById('modal');
+  var modalTitle = document.getElementById('modalTitle');
+  var qrSlot = document.getElementById('qrSlot');
+  var modalDone = document.getElementById('modalDone');
+
+  var selected = null;
+
+  function formatPrice(value) {
+    return '¥' + value.toFixed(2);
+  }
+
+  // Custom mileage: tier price up to 10km, then +2.5 per extra km.
+  // Exact pack sizes keep the listed pack price.
+  function priceForKm(km) {
+    if (!(km > 0)) return null;
+    for (var i = 0; i < PACKS.length; i++) {
+      if (Math.abs(PACKS[i].km - km) < 1e-9) return PACKS[i].price;
+    }
+    for (var j = 0; j < TIERS.length; j++) {
+      if (km <= TIERS[j].km) return TIERS[j].price;
+    }
+    return BASE_PRICE + (km - BASE_KM) * PER_KM;
+  }
+
+  function render(next) {
+    selected = next;
+    Array.prototype.forEach.call(optionButtons, function (btn) {
+      var on = !!next && next.source === 'preset' && Number(btn.dataset.km) === next.km;
+      btn.classList.toggle('is-on', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    customCard.classList.toggle('is-on', !!next && next.source === 'custom');
+    amountEl.textContent = formatPrice(next ? next.price : 0);
+    payWechat.disabled = !next;
+    payAlipay.disabled = !next;
+  }
+
+  Array.prototype.forEach.call(optionButtons, function (btn) {
+    btn.addEventListener('click', function () {
+      render({ km: Number(btn.dataset.km), price: Number(btn.dataset.price), source: 'preset' });
+    });
+  });
+
+  customInput.addEventListener('input', function () {
+    var km = parseFloat(customInput.value);
+    var price = priceForKm(km);
+    customOut.textContent = price === null ? '—' : formatPrice(price);
+    render(price === null ? null : { km: km, price: price, source: 'custom' });
+  });
+
+  function openModal(method) {
+    if (!selected) return;
+    var label = method === 'wechat' ? '微信二维码' : '支付宝二维码';
+    var url = QR_IMAGES[method];
+
+    modalTitle.textContent = '请扫码支付 ' + formatPrice(selected.price);
+    qrSlot.textContent = '';
+    qrSlot.classList.toggle('is-img', !!url);
+    if (url) {
+      var img = document.createElement('img');
+      img.src = url;
+      img.alt = label;
+      qrSlot.appendChild(img);
+    } else {
+      qrSlot.textContent = label;
+    }
+    modal.classList.add('is-open');
+  }
+
+  function closeModal() {
+    modal.classList.remove('is-open');
+  }
+
+  payWechat.addEventListener('click', function () { openModal('wechat'); });
+  payAlipay.addEventListener('click', function () { openModal('alipay'); });
+  modalDone.addEventListener('click', closeModal);
+  modal.addEventListener('click', function (event) {
+    if (event.target === modal) closeModal();
+  });
+
+  render(null);
+})();
+</script>
+</body>
+</html>
