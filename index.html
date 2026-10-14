@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>校园跑</title>
+<title>运动世界校园跑</title>
 <style>
   :root {
     --brand-1: #6366f1;
@@ -149,6 +149,79 @@
     background: none;
   }
   .qr img { display: block; width: 100%; height: auto; border-radius: 12px; }
+
+  .qr-wrap { position: relative; }
+
+  /* Animated long-press hint. Hidden until a real QR image is set, and it never
+     takes touches so the long press still lands on the image. */
+  .press-hint {
+    display: none;
+    position: absolute;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .modal-box.has-qr .press-hint { display: flex; }
+  .tap { position: relative; width: 44px; height: 44px; }
+  .tap .finger {
+    position: relative;
+    display: block;
+    width: 44px;
+    height: 44px;
+    /* dark finger with a white halo so it stays visible over the QR pattern */
+    color: #111827;
+    filter: drop-shadow(0 0 2px #fff) drop-shadow(0 1px 4px rgba(0, 0, 0, .4));
+    animation: press-finger 2.2s ease-in-out infinite;
+  }
+  .tap .ripple {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 56px;
+    height: 56px;
+    margin: -14px 0 0 -28px;
+    border-radius: 50%;
+    background: rgba(99, 102, 241, .45);
+    animation: press-ripple 2.2s ease-out infinite;
+  }
+  .press-tip { display: none; margin: 12px 0 0; font-size: 13px; color: var(--muted); }
+  .press-tip-sub { display: none; margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+  .modal-box.has-qr .press-tip,
+  .modal-box.has-qr .press-tip-sub { display: block; }
+
+  /* reminder to keep the payment receipt */
+  .shot-tip {
+    display: none;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 14px 0 0;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.45;
+    text-align: left;
+  }
+  .modal-box.has-qr .shot-tip { display: flex; }
+  .shot-tip .shot-icon { flex: none; width: 18px; height: 18px; margin-top: 2px; color: var(--brand-1); }
+
+  @keyframes press-finger {
+    0%, 30% { transform: translateY(-18px) scale(1); }
+    45%, 75% { transform: translateY(2px) scale(.92); }
+    92%, 100% { transform: translateY(-18px) scale(1); }
+  }
+  @keyframes press-ripple {
+    0%, 44% { transform: scale(.3); opacity: 0; }
+    50% { transform: scale(.45); opacity: .7; }
+    78%, 100% { transform: scale(1.2); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tap .finger { animation: none; transform: translateY(-18px); }
+    .tap .ripple { animation: none; opacity: 0; }
+  }
+
   .modal-done {
     width: 100%;
     height: 48px;
@@ -162,7 +235,7 @@
 </style>
 </head>
 <body>
-  <h1>校园跑</h1>
+  <h1>运动世界校园跑</h1>
   <p class="page-sub">选择里程，扫码支付后联系客服</p>
 
   <section class="card">
@@ -197,14 +270,29 @@
       <button id="payWechat" type="button" disabled>微信支付</button>
       <button id="payAlipay" type="button" disabled>支付宝</button>
     </div>
-    <p class="bar-note">付款后请联系客服确认订单</p>
+    <p class="bar-note">付款后请截图支付记录，联系客服确认订单</p>
   </footer>
 
   <div class="modal" id="modal">
-    <div class="modal-box">
+    <div class="modal-box" id="modalBox">
       <p class="modal-title" id="modalTitle"></p>
-      <!-- QR slot: the image is picked from QR_IMAGES in the script below -->
-      <div class="qr" id="qrSlot"></div>
+      <div class="qr-wrap">
+        <!-- QR slot: the image is picked from QR_IMAGES in the script below -->
+        <div class="qr" id="qrSlot"></div>
+        <!-- long-press hint overlay, pointer-events none so touches reach the image -->
+        <div class="press-hint" aria-hidden="true">
+          <div class="tap">
+            <span class="ripple"></span>
+            <svg class="finger" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 11.24V7.5C9 6.12 10.12 5 11.5 5S14 6.12 14 7.5v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.91-1.38z"/></svg>
+          </div>
+        </div>
+      </div>
+      <p class="press-tip">长按上方二维码，选择「识别图中二维码」</p>
+      <p class="press-tip-sub">长按没反应？截图保存后用「扫一扫 → 相册」导入</p>
+      <div class="shot-tip">
+        <svg class="shot-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 15.2c1.77 0 3.2-1.43 3.2-3.2s-1.43-3.2-3.2-3.2-3.2 1.43-3.2 3.2 1.43 3.2 3.2 3.2zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+        <span>付款完成后请<strong>截图支付记录</strong>，添加客服微信发送截图确认订单</span>
+      </div>
       <button class="modal-done" id="modalDone" type="button">我已完成</button>
     </div>
   </div>
@@ -239,6 +327,7 @@
   var modal = document.getElementById('modal');
   var modalTitle = document.getElementById('modalTitle');
   var qrSlot = document.getElementById('qrSlot');
+  var modalBox = document.getElementById('modalBox');
   var modalDone = document.getElementById('modalDone');
 
   var selected = null;
@@ -294,6 +383,7 @@
     modalTitle.textContent = '请扫码支付 ' + formatPrice(selected.price);
     qrSlot.textContent = '';
     qrSlot.classList.toggle('is-img', !!url);
+    modalBox.classList.toggle('has-qr', !!url);
     if (url) {
       var img = document.createElement('img');
       img.src = url;
